@@ -47,5 +47,25 @@ class VehicleController extends Controller
         'vehicle' => $vehicle,
     ]);
 }
+ 
+public function getVehicles()
+{
+    // ✅ Get company context from middleware
+    $company = app('company');
+
+    // ✅ Fetch all vehicles for this company, with driver info
+    $vehicles = \App\Models\Vehicle::with(['driver:id,name,email,is_driver'])
+        ->where('company_id', $company->id)
+        ->get(['id', 'vehicle_number', 'type', 'capacity', 'driver_id', 'created_at']);
+
+    // ✅ Optionally group by vehicle type (nice for frontend display)
+    $grouped = [
+        'trucks' => $vehicles->where('type', 'truck')->values(),
+        'mini_trucks' => $vehicles->where('type', 'mini_truck')->values(),
+        'all' => $vehicles->values(),
+    ];
+
+    return response()->json($grouped);
+}
 
 }

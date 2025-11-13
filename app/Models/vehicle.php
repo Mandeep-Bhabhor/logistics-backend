@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
 
 class vehicle extends Model
 {
@@ -15,4 +16,9 @@ class vehicle extends Model
        
 
     ];
+
+    public function driver()
+{
+    return $this->belongsTo(User::class, 'driver_id');
+}
 }

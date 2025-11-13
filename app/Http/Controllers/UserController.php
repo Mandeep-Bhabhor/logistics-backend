@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use phpDocumentor\Reflection\Types\Boolean;
 
 class UserController extends Controller
 {
@@ -38,7 +39,7 @@ class UserController extends Controller
 
         // ✅ Return JSON response
         return response()->json([
-            'message' => 'User registered successfully',
+            'message' => 'Admin registered successfully',
             'user' => $user,
         ]);
     }
@@ -55,4 +56,57 @@ class UserController extends Controller
 
         return response()->json($drivers);
     }
+
+    public function getStaff()
+{
+    $company = app('company');
+
+    // Fetch all staff (both drivers and normal employees)
+    $staff = User::where('company_id', $company->id)
+        ->where('role', 'staff')
+        ->get(['id', 'name', 'email', 'is_driver']);
+
+    // Return in grouped form (optional but neat)
+    $grouped = [
+        'drivers' => $staff->where('is_driver', true)->values(),
+        'non_drivers' => $staff->where('is_driver', false)->values(),
+        'all' => $staff->values(),
+    ];
+
+    return response()->json($grouped);
+}
+  
+
+public function registeruser(Request $request){
+    $company = app('company');
+
+       // ✅ Validate inputs
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:6',
+        ]);
+
+        // ✅ Check how many users already exist for this company
+        // $existingUsers = User::where('company_id', $company->id)->count();
+
+        // ✅ If first user → make admin, else staff
+        // $role = $existingUsers === 0 ? 'company_admin' : 'staff';
+
+        // ✅ Create user
+        $user = User::create([
+            'company_id' => $company->id,
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => 'customer',
+            'is_driver' => boolval(false),
+        ]);
+
+        // ✅ Return JSON response
+        return response()->json([
+            'message' => 'User registered successfully',
+            'user' => $user,
+        ]);
+}
 }
